@@ -87,7 +87,7 @@ func (decoder *addressDecoder) PublicKeyToAddress(pub []byte, isTestnet bool) (s
 	//	return "", err
 	//}
 
-	pkHash := owcrypt.Hash(pub, 0, owcrypt.HASH_ALG_HASH160)
+	pkHash := owcrypt.Hash(owcrypt.Hash(pub, 0, owcrypt.HASH_ALG_BLAKE256), 0, owcrypt.HASH_ALG_RIPEMD160)
 
 	address := addressEncoder.AddressEncode(pkHash, cfg)
 
