@@ -105,9 +105,8 @@ func TestWalletManager_GetTransactionByWxID(t *testing.T) {
 
 func TestWalletManager_GetAssetsAccountBalance(t *testing.T) {
 	tm := testInitWalletManager()
-	walletID := "WEWpRguMenJBRaRMHSbo5ihfyfL8DxjbKo"
-	//accountID := "BgNKcUyzJjhtaBBSKf8rpBB3gh9ZcQLqKbKcynFfgb7J"
-	accountID := "GAcxWhkeFthDyTE1UW6pwsDA4yX7SoAG7zAfKtcN5LEs"
+	walletID := "VyvuSsYQ2ziBBCGb71em8PyFJF6yNyH4UQ"
+	accountID := "6AmHoqDrkBbe4fyZFLupYUJxFaynMdCJ5Wariv5yuEeF"
 
 	balance, err := tm.GetAssetsAccountBalance(testApp, walletID, accountID)
 	if err != nil {
@@ -119,14 +118,14 @@ func TestWalletManager_GetAssetsAccountBalance(t *testing.T) {
 
 func TestWalletManager_GetAssetsAccountTokenBalance(t *testing.T) {
 	tm := testInitWalletManager()
-	walletID := "W7tue6SDce38fPwerdKqyebUh6yo2nTQLC"
-	accountID := "EPxkNBu6iMospC6aHQppv36UGY4mb1WqUE7oNZ7Xp9Df"
+	walletID := "VyvuSsYQ2ziBBCGb71em8PyFJF6yNyH4UQ"
+	accountID := "6AmHoqDrkBbe4fyZFLupYUJxFaynMdCJ5Wariv5yuEeF"
 
 	contract := openwallet.SmartContract{
-		Address:  "2",
-		Symbol:   "BTC",
-		Name:     "TetherUSD",
-		Token:    "USDT",
+		Address:  "19",
+		Symbol:   "HC",
+		Name:     "ENTCASH",
+		Token:    "ENTC",
 		Decimals: 8,
 	}
 

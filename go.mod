@@ -1,4 +1,4 @@
-module github.com/blocktree/hc-adapter
+module github.com/blocktree/hypercash-adapter
 
 go 1.12
 
@@ -8,7 +8,7 @@ require (
 	github.com/agl/ed25519 v0.0.0-20170116200512-5312a6153412 // indirect
 	github.com/asdine/storm v2.1.2+incompatible
 	github.com/astaxie/beego v1.11.1
-	github.com/blocktree/go-owcdrivers v1.0.37
+	github.com/blocktree/go-owcdrivers v1.0.42
 	github.com/blocktree/go-owcrypt v1.0.2
 	github.com/blocktree/openwallet v1.4.6
 	github.com/bndr/gotabulate v1.1.2
@@ -23,4 +23,4 @@ require (
 	go.etcd.io/bbolt v1.3.3 // indirect
 )
 
-replace github.com/blocktree/go-owcdrivers => ../../go-owcdrivers
+//replace github.com/blocktree/go-owcdrivers => ../../go-owcdrivers

@@ -13,7 +13,7 @@
  * GNU Lesser General Public License for more details.
  */
 
-package hc
+package hypercash
 
 import (
 	"testing"
@@ -31,7 +31,7 @@ func TestWalletManager_GetOmniBalance(t *testing.T) {
 }
 
 func TestWalletManager_IsHaveOmniAssets(t *testing.T) {
-	address := "Tsa6c6ivPG3fjRnJwKjGPUyMauPYDvK6Ckk"
+	address := "HsC2XDBCvxu4Z8nmWSVtLoZrCGiznRK2mpr"
 	//address := "mi9qsHKMqtrgnbxg7ifdPMk1LsFmen4xNn"
 	bool := tw.IsHaveOmniAssets(address)
 	t.Logf("IsHaveOmniAssets: %v\n", bool)

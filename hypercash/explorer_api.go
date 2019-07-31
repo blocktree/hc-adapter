@@ -13,7 +13,7 @@
  * GNU Lesser General Public License for more details.
  */
 
-package hc
+package hypercash
 
 import (
 	"encoding/hex"
@@ -178,6 +178,7 @@ func (wm *WalletManager) listUnspentByExplorer(address ...string) ([]*Unspent, e
 
 	var (
 		utxos = make([]*Unspent, 0)
+		utxoMap = make(map[string]*Unspent, 0)
 	)
 
 	addrs := strings.Join(address, ",")
@@ -195,7 +196,13 @@ func (wm *WalletManager) listUnspentByExplorer(address ...string) ([]*Unspent, e
 
 	array := result.Array()
 	for _, a := range array {
-		utxos = append(utxos, NewUnspent(&a))
+		u := NewUnspent(&a)
+		sid := openwallet.GenTxOutPutSID(u.TxID, wm.Symbol(), "", u.Vout)
+		utxoMap[sid] = u
+	}
+
+	for _, u := range utxoMap {
+		utxos = append(utxos, u)
 	}
 
 	return utxos, nil
@@ -499,13 +506,13 @@ func (wm *WalletManager) getTxOutByExplorer(txid string, vout uint64) (*Vout, er
 //sendRawTransactionByExplorer 广播交易
 func (wm *WalletManager) sendRawTransactionByExplorer(txHex string) (string, error) {
 
-	request := req.Param{
+	request := map[string]interface{}{
 		"rawtx": txHex,
 	}
 
 	path := fmt.Sprintf("tx/send")
 
-	result, err := wm.ExplorerClient.Call(path, request, "POST")
+	result, err := wm.ExplorerClient.Call(path, req.BodyJSON(&request), "POST")
 	if err != nil {
 		return "", err
 	}

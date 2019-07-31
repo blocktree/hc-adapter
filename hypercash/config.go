@@ -13,11 +13,10 @@
  * GNU Lesser General Public License for more details.
  */
 
-package hc
+package hypercash
 
 import (
 	"fmt"
-	"github.com/blocktree/go-owcdrivers/hcTransaction"
 	"path/filepath"
 	"strings"
 	"time"
@@ -44,11 +43,6 @@ const (
 	MasterKey = "HyperCash seed"
 	CurveType = owcrypt.ECC_CURVE_SECP256K1
 	Decimals  = int32(8)
-)
-
-var (
-	MainNetAddressPrefix = hcTransaction.HCMainnetAddressPrefix
-	TestNetAddressPrefix = hcTransaction.HCTestnetAddressPrefix
 )
 
 type WalletConfig struct {
@@ -116,10 +110,6 @@ type WalletConfig struct {
 	OmniRPCPassword string
 	//是否支持omni
 	OmniSupport bool
-	//主网地址前缀
-	MainNetAddressPrefix hcTransaction.AddressPrefix
-	//测试网地址前缀
-	TestNetAddressPrefix hcTransaction.AddressPrefix
 	//小数位精度
 	Decimals int32
 	//最低手续费
@@ -190,8 +180,6 @@ func NewConfig(symbol string, curveType uint32, decimals int32) *WalletConfig {
 	c.Decimals = decimals
 	//最低手续费
 	c.MinFees = decimal.Zero
-	c.MainNetAddressPrefix = MainNetAddressPrefix
-	c.TestNetAddressPrefix = TestNetAddressPrefix
 
 	//创建目录
 	//file.MkdirAll(c.dbPath)

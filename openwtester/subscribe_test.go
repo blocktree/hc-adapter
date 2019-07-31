@@ -58,8 +58,8 @@ func TestSubscribeAddress_HC(t *testing.T) {
 		endRunning = make(chan bool, 1)
 		symbol     = "HC"
 		addrs      = map[string]string{
-			"HsEYzpULB2cthfP3LtxaFpkk7sEJCrWuHeL": "sender",
-			"HsSKV3826oarZ1C1raWbyhfPZvWCzdaAZsd": "receiver",
+			"HsQKSieTfyLyDdXpFTqiVwcVj2mmytHmftj": "sender",
+			"HsFVX4Y1wikYjzfZrWKSsnQqPPpiuTuu6KW": "receiver",
 		}
 	)
 
@@ -94,7 +94,7 @@ func TestSubscribeAddress_HC(t *testing.T) {
 
 	//log.Debug("already got scanner:", assetsMgr)
 	scanner := assetsMgr.GetBlockScanner()
-	scanner.SetRescanBlockHeight(203406)
+	scanner.SetRescanBlockHeight(203673)
 
 	if scanner == nil {
 		log.Error(symbol, "is not support block scan")

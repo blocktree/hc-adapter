@@ -13,7 +13,7 @@
  * GNU Lesser General Public License for more details.
  */
 
-package hc
+package hypercash
 
 import (
 	"encoding/hex"
@@ -79,6 +79,8 @@ type Unspent struct {
 	Confirmations uint64 `json:"confirmations"`
 	Spendable     bool   `json:"spendable"`
 	Solvable      bool   `json:"solvable"`
+	BlockIndex    uint32 `json:"blockindex"`
+	BlockHeight   uint32 `json:"height"`
 	HDAddress     openwallet.Address
 }
 
@@ -95,7 +97,8 @@ func NewUnspent(json *gjson.Result) *Unspent {
 	//obj.Spendable = gjson.Get(json.Raw, "spendable").Bool()
 	obj.Spendable = true
 	obj.Solvable = gjson.Get(json.Raw, "solvable").Bool()
-
+	obj.BlockIndex = uint32(gjson.Get(json.Raw, "blockindex").Uint())
+	obj.BlockHeight = uint32(gjson.Get(json.Raw, "height").Uint())
 	return obj
 }
 
@@ -125,8 +128,8 @@ type User struct {
 	UserKey string `storm:"id"`     // primary key
 	Group   string `storm:"index"`  // this field will be indexed
 	Email   string `storm:"unique"` // this field will be indexed with a unique constraint
-	Name    string                  // this field will not be indexed
-	Age     int `storm:"index"`
+	Name    string // this field will not be indexed
+	Age     int    `storm:"index"`
 }
 
 type Block struct {
@@ -349,17 +352,17 @@ func newTxVinByCore(json *gjson.Result) *Vin {
 func newTxVoutByCore(json *gjson.Result) *Vout {
 
 	/*
-	{
-		"value": 4788.23192231,
-		"n": 0,
-		"scriptPubKey": {
-		"asm": "OP_HASH160 a0fe07f130a36d9c7581ccd2886895c049b0cc82 OP_EQUAL",
-			"hex": "a914a0fe07f130a36d9c7581ccd2886895c049b0cc8287",
-			"reqSigs": 1,
-			"type": "scripthash",
-			"addresses": ["2N7vURMwMDjqgijLNFsErFLAWtAg58S6qNv"]
-	}
-	}
+		{
+			"value": 4788.23192231,
+			"n": 0,
+			"scriptPubKey": {
+			"asm": "OP_HASH160 a0fe07f130a36d9c7581ccd2886895c049b0cc82 OP_EQUAL",
+				"hex": "a914a0fe07f130a36d9c7581ccd2886895c049b0cc8287",
+				"reqSigs": 1,
+				"type": "scripthash",
+				"addresses": ["2N7vURMwMDjqgijLNFsErFLAWtAg58S6qNv"]
+		}
+		}
 	*/
 	obj := Vout{}
 	//解析json

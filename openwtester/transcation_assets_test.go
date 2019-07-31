@@ -121,24 +121,24 @@ func testSubmitTransactionStep(tm *openw.WalletManager, rawTx *openwallet.RawTra
 func TestTransfer(t *testing.T) {
 
 	targets := []string{
-		"HsCSdbyaBE22FK75G5vLD4HgyxAu8npgmjr",
-		//"HsD3NVQJey4s83iZk3egSSgWTLX5PmXBaBL",
-		//"HsECrDwanMRGMT4ZhevTS5TZgkqCXxX9Q1i",
-		//"HsNBp81RWfMkKCXgc44tiTCaeCQvV3pdfgN",
-		//"HsS3B2L42hZjkstZc1XEasjJjYw4axtVHbC",
-		//"HsUKAWBkfDLApptAWPVKH6jGW2GZSPEyoud",
+		"HsQ5KuGEL3Fc2ZgZyKGcxcgVM9hHyemze3S",
+		"HsEYgLiLKhsDGC4vQQrrihbUz7FkNHuTocM",
+		"HsaUZ7SFk64c7TuB7ob5mXQAUwLPDkPBqX1",
+		"HsCvRfC8dcWxE3XJur838HvMn57ggQqeqTY",
+		"HsPK4JHnCWYtfTt1eE8WPir516AAduF3Ujy",
+		"HsC2XDBCvxu4Z8nmWSVtLoZrCGiznRK2mpr",
 	}
 
 	tm := testInitWalletManager()
 
-	walletID := "WEWpRguMenJBRaRMHSbo5ihfyfL8DxjbKo"
-	accountID := "GAcxWhkeFthDyTE1UW6pwsDA4yX7SoAG7zAfKtcN5LEs"
+	walletID := "VyvuSsYQ2ziBBCGb71em8PyFJF6yNyH4UQ"
+	accountID := "6AmHoqDrkBbe4fyZFLupYUJxFaynMdCJ5Wariv5yuEeF"
 
 	testGetAssetsAccountBalance(tm, walletID, accountID)
 
 	for _, to := range targets {
 
-		rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "0.12345", "", nil)
+		rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "5", "", nil)
 		if err != nil {
 			return
 		}
@@ -155,10 +155,10 @@ func TestTransfer(t *testing.T) {
 			return
 		}
 
-		//_, err = testSubmitTransactionStep(tm, rawTx)
-		//if err != nil {
-		//	return
-		//}
+		_, err = testSubmitTransactionStep(tm, rawTx)
+		if err != nil {
+			return
+		}
 
 	}
 
@@ -167,23 +167,25 @@ func TestTransfer(t *testing.T) {
 
 func TestTransfer_OMNI(t *testing.T) {
 
-	//mkJrhf8Bp3RWfL5eyatcfqPBDDUUXgHQYm
-	//mkUDixUXqgUqGPEGEtxJUoQBvpDeSnjL2Z
-	//mkzbZ9557cvXAEpvCSQypDoXRiVb8dCtEV
-	//mqUoroU8ttLBNgCatzAgBtvyMYM8M1tN8d
-	//mu9ZjobWsHr2KxLG3ELJTRkYJzRLsSqNCX
-	//mwawxdBn9w4CPxic961vPnyj9HqDVGnkth
+	targets := []string{
+		"HsQ5KuGEL3Fc2ZgZyKGcxcgVM9hHyemze3S",
+		"HsEYgLiLKhsDGC4vQQrrihbUz7FkNHuTocM",
+		"HsaUZ7SFk64c7TuB7ob5mXQAUwLPDkPBqX1",
+		"HsCvRfC8dcWxE3XJur838HvMn57ggQqeqTY",
+		"HsPK4JHnCWYtfTt1eE8WPir516AAduF3Ujy",
+		"HsC2XDBCvxu4Z8nmWSVtLoZrCGiznRK2mpr",
+	}
 
 	tm := testInitWalletManager()
-	walletID := "W5aQbddWii7ozwWGCzEiej8oagVNqChEoM"
-	accountID := "9W5GvVHfJNJ2DGfPwABsFSnENyB3tQ1YJEsqkJjxeoEs"
-	to := "WBLbXScVoEXAfEWzkM1NtzKS6r4YbsgcTy"
+	walletID := "VyvuSsYQ2ziBBCGb71em8PyFJF6yNyH4UQ"
+	accountID := "6AmHoqDrkBbe4fyZFLupYUJxFaynMdCJ5Wariv5yuEeF"
+	//to := "HsC2XDBCvxu4Z8nmWSVtLoZrCGiznRK2mpr"
 
 	contract := openwallet.SmartContract{
-		Address:  "2",
-		Symbol:   "BTC",
-		Name:     "Test Omni",
-		Token:    "Omni",
+		Address:  "19",
+		Symbol:   "HC",
+		Name:     "ENTCASH",
+		Token:    "ENTC",
 		Decimals: 8,
 	}
 
@@ -191,33 +193,34 @@ func TestTransfer_OMNI(t *testing.T) {
 
 	testGetAssetsAccountTokenBalance(tm, walletID, accountID, contract)
 
-	rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "1000", "", &contract)
-	if err != nil {
-		return
-	}
+	for _, to := range targets {
+		rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "12", "", &contract)
+		if err != nil {
+			return
+		}
 
-	_, err = testSignTransactionStep(tm, rawTx)
-	if err != nil {
-		return
-	}
+		_, err = testSignTransactionStep(tm, rawTx)
+		if err != nil {
+			return
+		}
 
-	_, err = testVerifyTransactionStep(tm, rawTx)
-	if err != nil {
-		return
-	}
+		_, err = testVerifyTransactionStep(tm, rawTx)
+		if err != nil {
+			return
+		}
 
-	_, err = testSubmitTransactionStep(tm, rawTx)
-	if err != nil {
-		return
+		_, err = testSubmitTransactionStep(tm, rawTx)
+		if err != nil {
+			return
+		}
 	}
-
 }
 
 func TestSummary(t *testing.T) {
 	tm := testInitWalletManager()
-	walletID := "W5aQbddWii7ozwWGCzEiej8oagVNqChEoM"
-	accountID := "9W5GvVHfJNJ2DGfPwABsFSnENyB3tQ1YJEsqkJjxeoEs"
-	summaryAddress := "WBLbXScVoEXAfEWzkM1NtzKS6r4YbsgcTy"
+	walletID := "VyvuSsYQ2ziBBCGb71em8PyFJF6yNyH4UQ"
+	accountID := "FVWfiorkC9YNY2BZ2KceE2qSQgTGWiKdzRNLsyNYtiNE"
+	summaryAddress := "HsGvJmdYdjeGNgXqt3jtMuAn65QrMCL3e6u"
 
 	testGetAssetsAccountBalance(tm, walletID, accountID)
 
@@ -258,20 +261,20 @@ func TestSummary(t *testing.T) {
 func TestSummary_OMNI(t *testing.T) {
 
 	tm := testInitWalletManager()
-	walletID := "W5aQbddWii7ozwWGCzEiej8oagVNqChEoM"
-	accountID := "9W5GvVHfJNJ2DGfPwABsFSnENyB3tQ1YJEsqkJjxeoEs"
-	summaryAddress := "WBLbXScVoEXAfEWzkM1NtzKS6r4YbsgcTy"
+	walletID := "VyvuSsYQ2ziBBCGb71em8PyFJF6yNyH4UQ"
+	accountID := "FVWfiorkC9YNY2BZ2KceE2qSQgTGWiKdzRNLsyNYtiNE"
+	summaryAddress := "HsGvJmdYdjeGNgXqt3jtMuAn65QrMCL3e6u"
 
 	contract := openwallet.SmartContract{
-		Address:  "2",
+		Address:  "19",
 		Symbol:   "HC",
-		Name:     "Test Omni",
-		Token:    "Omni",
+		Name:     "ENTCASH",
+		Token:    "ENTC",
 		Decimals: 8,
 	}
 
 	feesSupport := openwallet.FeesSupportAccount{
-		AccountID: "9W5GvVHfJNJ2DGfPwABsFSnENyB3tQ1YJEsqkJjxeoEs",
+		AccountID: "6AmHoqDrkBbe4fyZFLupYUJxFaynMdCJ5Wariv5yuEeF",
 		//FixSupportAmount: "0.01",
 		FeesSupportScale: "1",
 	}

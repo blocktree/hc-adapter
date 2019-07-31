@@ -13,7 +13,7 @@
  * GNU Lesser General Public License for more details.
  */
 
-package hc
+package hypercash
 
 import (
 	"errors"
@@ -1027,6 +1027,7 @@ func (wm *WalletManager) ListUnspent(min uint64, addresses ...string) ([]*Unspen
 		}
 		utxo = append(utxo, pice...)
 	}
+
 	return utxo, nil
 }
 
@@ -1734,6 +1735,8 @@ func (wm *WalletManager) CreateChangeAddress(walletID string, key *hdkeystore.HD
 func (wm *WalletManager) EstimateFee(inputs, outputs int64, feeRate decimal.Decimal) (decimal.Decimal, error) {
 
 	var piece int64 = 1
+
+	feeRate = feeRate.Mul(decimal.New(3, 0))
 
 	//UTXO如果大于设定限制，则分拆成多笔交易单发送
 	if inputs > int64(wm.Config.MaxTxInputs) {

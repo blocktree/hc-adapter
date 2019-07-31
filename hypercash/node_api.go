@@ -13,7 +13,7 @@
  * GNU Lesser General Public License for more details.
  */
 
-package hc
+package hypercash
 
 import (
 	"crypto/tls"

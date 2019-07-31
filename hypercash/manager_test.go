@@ -13,7 +13,7 @@
  * GNU Lesser General Public License for more details.
  */
 
-package hc
+package hypercash
 
 import (
 	"fmt"
@@ -340,7 +340,7 @@ func TestGetBlockChainInfo(t *testing.T) {
 func TestListUnspent(t *testing.T) {
 	//msHemmfSZ3au6h9S1annGcTGrTVryRbSFV
 	//mtHT3JkeKnJZCejqp6nxScxxvbW6Wn8e92
-	utxos, err := tw.ListUnspent(0, "HsLY2kcyKuRKHZ7MZJ1MW4gvND2Q23m5wsd")
+	utxos, err := tw.ListUnspent(0, "HsGvJmdYdjeGNgXqt3jtMuAn65QrMCL3e6u")
 	if err != nil {
 		t.Errorf("ListUnspent failed unexpected error: %v\n", err)
 		return
@@ -486,8 +486,8 @@ func TestPrintConfig(t *testing.T) {
 }
 
 func TestRestoreWallet(t *testing.T) {
-	keyFile := "D:/gopath/src/github.com/blocktree/hc-adapter/openwtester/openw_data/key/HELLO HC-W5aQbddWii7ozwWGCzEiej8oagVNqChEoM.key"
-	dbFile := "D:/gopath/src/github.com/blocktree/hc-adapter/openwtester/openw_data/db/hc-adapter.db"
+	keyFile := "D:/gopath/src/github.com/blocktree/hypercash-adapter/openwtester/openw_data/key/HELLO HC-W5aQbddWii7ozwWGCzEiej8oagVNqChEoM.key"
+	dbFile := "D:/gopath/src/github.com/blocktree/hypercash-adapter/openwtester/openw_data/db/hypercash-adapter.db"
 	datFile := "D:/gopath/bin/openwallet.exe"
 	tw.LoadConfig()
 	err := tw.RestoreWallet(keyFile, dbFile, datFile, "111111")

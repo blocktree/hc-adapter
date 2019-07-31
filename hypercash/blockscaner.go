@@ -13,7 +13,7 @@
  * GNU Lesser General Public License for more details.
  */
 
-package hc
+package hypercash
 
 import (
 	"errors"
@@ -410,7 +410,7 @@ func (bs *HCBlockScanner) newBlockNotify(block *Block, isFork bool) {
 }
 
 //BatchExtractTransaction 批量提取交易单
-//hc 1M的区块链可以容纳3000笔交易，批量多线程处理，速度更快
+//hypercash 1M的区块链可以容纳3000笔交易，批量多线程处理，速度更快
 func (bs *HCBlockScanner) BatchExtractTransaction(blockHeight uint64, blockHash string, txs []string) error {
 
 	var (

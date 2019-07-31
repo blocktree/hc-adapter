@@ -13,14 +13,13 @@
  * GNU Lesser General Public License for more details.
  */
 
-package hc
+package hypercash
 
 import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/blocktree/go-owcdrivers/hcTransaction"
-	"github.com/blocktree/go-owcdrivers/omniTransaction"
+	"github.com/blocktree/go-owcdrivers/hypercashTransaction"
 	"github.com/blocktree/openwallet/common"
 	"github.com/blocktree/openwallet/openwallet"
 	"github.com/shopspring/decimal"
@@ -331,23 +330,16 @@ func (decoder *TransactionDecoder) SignHCRawTransaction(wrapper openwallet.Walle
 			if err != nil {
 				return err
 			}
-			decoder.wm.Log.Debug("privateKey:", hex.EncodeToString(keyBytes))
+			//decoder.wm.Log.Debug("privateKey:", hex.EncodeToString(keyBytes))
 
 			//privateKeys = append(privateKeys, keyBytes)
-			txHash := hcTransaction.TxHash{
-				Hash: keySignature.Message,
-				Normal: &hcTransaction.NormalTx{
-					Address: keySignature.Address.Address,
-					SigType: hcTransaction.SigHashAll,
-				},
-			}
-			//transHash = append(transHash, txHash)
+			txHash := keySignature.Message
 
-			decoder.wm.Log.Debug("hash:", txHash.GetTxHashHex())
+			decoder.wm.Log.Debug("hash:", txHash)
 
 			//签名交易
 			/////////交易单哈希签名
-			sigPub, err := hcTransaction.SignRawTransactionHash(txHash.GetTxHashHex(), keyBytes)
+			sigPub, err := hypercashTransaction.SignTransaction(txHash, keyBytes)
 			if err != nil {
 				return fmt.Errorf("transaction hash sign failed, unexpected error: %v", err)
 			} else {
@@ -362,7 +354,7 @@ func (decoder *TransactionDecoder) SignHCRawTransaction(wrapper openwallet.Walle
 				//txHash.Normal.SigPub = *sigPub
 			}
 
-			keySignature.Signature = hex.EncodeToString(sigPub.Signature)
+			keySignature.Signature = hex.EncodeToString(sigPub)
 		}
 	}
 
@@ -385,11 +377,8 @@ func (decoder *TransactionDecoder) VerifyHCRawTransaction(wrapper openwallet.Wal
 	//}
 
 	var (
-		txUnlocks  = make([]hcTransaction.TxUnlock, 0)
 		emptyTrans = rawTx.RawHex
-		//sigPub     = make([]btcTransaction.SignaturePubkey, 0)
-		transHash     = make([]hcTransaction.TxHash, 0)
-		addressPrefix hcTransaction.AddressPrefix
+		sigPub     = make([]*hypercashTransaction.SigPub, 0)
 	)
 
 	if rawTx.Signatures == nil || len(rawTx.Signatures) == 0 {
@@ -406,75 +395,21 @@ func (decoder *TransactionDecoder) VerifyHCRawTransaction(wrapper openwallet.Wal
 			signature, _ := hex.DecodeString(keySignature.Signature)
 			pubkey, _ := hex.DecodeString(keySignature.Address.PublicKey)
 
-			signaturePubkey := hcTransaction.SignaturePubkey{
+			signaturePubkey := &hypercashTransaction.SigPub{
 				Signature: signature,
-				Pubkey:    pubkey,
+				PublicKey: pubkey,
 			}
 
-			//sigPub = append(sigPub, signaturePubkey)
-
-			txHash := hcTransaction.TxHash{
-				Hash: keySignature.Message,
-				Normal: &hcTransaction.NormalTx{
-					Address: keySignature.Address.Address,
-					SigType: hcTransaction.SigHashAll,
-					SigPub:  signaturePubkey,
-				},
-			}
-
-			transHash = append(transHash, txHash)
+			sigPub = append(sigPub, signaturePubkey)
 
 			decoder.wm.Log.Debug("Signature:", keySignature.Signature)
 			decoder.wm.Log.Debug("PublicKey:", keySignature.Address.PublicKey)
 		}
 	}
 
-	txBytes, err := hex.DecodeString(emptyTrans)
-	if err != nil {
-		return errors.New("Invalid transaction hex data!")
-	}
-
-	trx, err := hcTransaction.DecodeRawTransaction(txBytes, decoder.wm.Config.SupportSegWit)
-	if err != nil {
-		return errors.New("Invalid transaction data! ")
-	}
-
-	for _, vin := range trx.Vins {
-
-		utxo, err := decoder.wm.GetTxOut(vin.GetTxID(), uint64(vin.GetVout()))
-		if err != nil {
-			return err
-		}
-
-		txUnlock := hcTransaction.TxUnlock{
-			LockScript: utxo.ScriptPubKey,
-			SigType:    hcTransaction.SigHashAll}
-		txUnlocks = append(txUnlocks, txUnlock)
-
-	}
-
-	//decoder.wm.Log.Debug(emptyTrans)
-
 	////////填充签名结果到空交易单
-	//  传入TxUnlock结构体的原因是： 解锁向脚本支付的UTXO时需要对应地址的赎回脚本， 当前案例的对应字段置为 "" 即可
-	signedTrans, err := hcTransaction.InsertSignatureIntoEmptyTransaction(emptyTrans, transHash, txUnlocks, decoder.wm.Config.SupportSegWit)
-	if err != nil {
-		return fmt.Errorf("transaction compose signatures failed")
-	}
-	//else {
-	//	//	fmt.Println("拼接后的交易单")
-	//	//	fmt.Println(signedTrans)
-	//	//}
-
-	if decoder.wm.Config.IsTestNet {
-		addressPrefix = decoder.wm.Config.TestNetAddressPrefix
-	} else {
-		addressPrefix = decoder.wm.Config.MainNetAddressPrefix
-	}
-
 	/////////验证交易单
-	//验证时，对于公钥哈希地址，需要将对应的锁定脚本传入TxUnlock结构体
-	pass := hcTransaction.VerifyRawTransaction(signedTrans, txUnlocks, decoder.wm.Config.SupportSegWit, addressPrefix)
+	pass, signedTrans := hypercashTransaction.VerifyAndCombineTransaction(emptyTrans, sigPub)
 	if pass {
 		decoder.wm.Log.Debug("transaction verify passed")
 		rawTx.IsCompleted = true
@@ -503,10 +438,10 @@ func (decoder *TransactionDecoder) GetRawTransactionFeeRate() (feeRate string, u
 func (decoder *TransactionDecoder) CreateOmniRawTransaction(wrapper openwallet.WalletDAI, rawTx *openwallet.RawTransaction) error {
 
 	var (
-		//vins      = make([]omniTransaction.Vin, 0)
-		//vouts     = make([]omniTransaction.Vout, 0)
-		//txUnlocks = make([]omniTransaction.TxUnlock, 0)
-		outputAddrs     = make(map[string]decimal.Decimal)
+		//vins      = make([]hypercashTransaction.Vin, 0)
+		//vouts     = make([]hypercashTransaction.Vout, 0)
+		//txUnlocks = make([]hypercashTransaction.TxUnlock, 0)
+		//outputAddrs     = make(map[string]decimal.Decimal)
 		omniOutputAddrs = make(map[string]string)
 
 		toAddress string
@@ -764,18 +699,32 @@ func (decoder *TransactionDecoder) CreateOmniRawTransaction(wrapper openwallet.W
 	decoder.wm.Log.Std.Notice("Change Address: %v", changeAddress)
 	decoder.wm.Log.Std.Notice("-----------------------------------------------")
 
-	outputAddrs = appendOutput(outputAddrs, toAddress, computeTotalSend)
+	//outputAddrs = appendOutput(outputAddrs, toAddress, computeTotalSend)
 	//outputAddrs[toAddress] = computeTotalSend.StringFixed(decoder.wm.Decimal())
 
+	coinTo := &hypercashTransaction.Vout{
+		Address:         toAddress,
+		Amount:          uint64(computeTotalSend.Shift(decoder.wm.Decimal()).IntPart()),
+		PkScriptVersion: hypercashTransaction.DefaultPkScriptVersion,
+	}
+
 	//changeAmount := balance.Sub(totalSend).Sub(actualFees)
+	var coinChange *hypercashTransaction.Vout
 	if changeAmount.GreaterThan(decimal.Zero) {
-		outputAddrs = appendOutput(outputAddrs, changeAddress, changeAmount)
+		//outputAddrs = appendOutput(outputAddrs, changeAddress, changeAmount)
+
+		coinChange = &hypercashTransaction.Vout{
+			Address:         changeAddress,
+			Amount:          uint64(changeAmount.Shift(decoder.wm.Decimal()).IntPart()),
+			PkScriptVersion: hypercashTransaction.DefaultPkScriptVersion,
+		}
+
 		//outputAddrs[changeAddress] = changeAmount.StringFixed(decoder.wm.Decimal())
 	}
 
 	omniOutputAddrs[toAddress] = toAmount.StringFixed(tokenDecimals)
 
-	err = decoder.createOmniRawTransaction(wrapper, rawTx, usedUTXO, outputAddrs, omniOutputAddrs)
+	err = decoder.createOmniRawTransaction(wrapper, rawTx, usedUTXO, coinTo, coinChange, omniOutputAddrs)
 	if err != nil {
 		return err
 	}
@@ -810,23 +759,17 @@ func (decoder *TransactionDecoder) SignOmniRawTransaction(wrapper openwallet.Wal
 					return err
 				}
 
-				decoder.wm.Log.Debug("privateKey:", hex.EncodeToString(keyBytes))
+				//decoder.wm.Log.Debug("privateKey:", hex.EncodeToString(keyBytes))
 
 				//privateKeys = append(privateKeys, keyBytes)
-				txHash := omniTransaction.TxHash{
-					Hash: keySignature.Message,
-					Normal: &omniTransaction.NormalTx{
-						Address: keySignature.Address.Address,
-						SigType: hcTransaction.SigHashAll,
-					},
-				}
+				txHash := keySignature.Message
 				//transHash = append(transHash, txHash)
 
-				decoder.wm.Log.Debug("hash:", txHash.GetTxHashHex())
+				decoder.wm.Log.Debug("hash:", txHash)
 
 				//签名交易
 				/////////交易单哈希签名
-				sigPub, err := omniTransaction.SignRawTransactionHash(txHash.GetTxHashHex(), keyBytes)
+				sigPub, err := hypercashTransaction.SignTransaction(txHash, keyBytes)
 				if err != nil {
 					return fmt.Errorf("transaction hash sign failed, unexpected error: %v", err)
 				} else {
@@ -841,7 +784,7 @@ func (decoder *TransactionDecoder) SignOmniRawTransaction(wrapper openwallet.Wal
 					//txHash.Normal.SigPub = *sigPub
 				}
 
-				keySignature.Signature = hex.EncodeToString(sigPub.Signature)
+				keySignature.Signature = hex.EncodeToString(sigPub)
 			}
 		}
 
@@ -865,11 +808,8 @@ func (decoder *TransactionDecoder) VerifyOmniRawTransaction(wrapper openwallet.W
 	//}
 
 	var (
-		txUnlocks  = make([]omniTransaction.TxUnlock, 0)
 		emptyTrans = rawTx.RawHex
-		//sigPub     = make([]btcTransaction.SignaturePubkey, 0)
-		transHash     = make([]omniTransaction.TxHash, 0)
-		addressPrefix omniTransaction.AddressPrefix
+		sigPub     = make([]*hypercashTransaction.SigPub, 0)
 	)
 
 	if rawTx.Signatures == nil || len(rawTx.Signatures) == 0 {
@@ -884,85 +824,37 @@ func (decoder *TransactionDecoder) VerifyOmniRawTransaction(wrapper openwallet.W
 			signature, _ := hex.DecodeString(keySignature.Signature)
 			pubkey, _ := hex.DecodeString(keySignature.Address.PublicKey)
 
-			signaturePubkey := omniTransaction.SignaturePubkey{
+			signaturePubkey := &hypercashTransaction.SigPub{
 				Signature: signature,
-				Pubkey:    pubkey,
+				PublicKey: pubkey,
+				Address:   keySignature.Address.Address,
 			}
 
-			//sigPub = append(sigPub, signaturePubkey)
-
-			txHash := omniTransaction.TxHash{
-				Hash: keySignature.Message,
-				Normal: &omniTransaction.NormalTx{
-					Address: keySignature.Address.Address,
-					SigType: hcTransaction.SigHashAll,
-					SigPub:  signaturePubkey,
-				},
-			}
-
-			transHash = append(transHash, txHash)
+			sigPub = append(sigPub, signaturePubkey)
 
 			decoder.wm.Log.Debug("Signature:", keySignature.Signature)
 			decoder.wm.Log.Debug("PublicKey:", keySignature.Address.PublicKey)
 		}
 	}
 
-	txBytes, err := hex.DecodeString(emptyTrans)
-	if err != nil {
-		return errors.New("Invalid transaction hex data!")
-	}
-
-	trx, err := omniTransaction.DecodeRawTransaction(txBytes, decoder.wm.Config.SupportSegWit)
+	txVins, err := hypercashTransaction.GetVinList(emptyTrans)
 	if err != nil {
 		return errors.New("Invalid transaction data! ")
 	}
 
-	for i, vin := range trx.Vins {
+	for i, vin := range txVins {
 
-		utxo, err := decoder.wm.GetTxOut(vin.GetTxID(), uint64(vin.GetVout()))
+		utxo, err := decoder.wm.GetTxOut(vin.TxID, uint64(vin.Vout))
 		if err != nil {
 			return err
 		}
 
-		txUnlock := omniTransaction.TxUnlock{
-			LockScript: utxo.ScriptPubKey,
-			SigType:    hcTransaction.SigHashAll}
-		txUnlocks = append(txUnlocks, txUnlock)
-
-		transHash = resetTransHashFunc(transHash, utxo.Addr, i)
-	}
-
-	//decoder.wm.Log.Debug(emptyTrans)
-
-	if decoder.wm.Config.IsTestNet {
-		addressPrefix = omniTransaction.AddressPrefix{
-			P2PKHPrefix:  decoder.wm.Config.TestNetAddressPrefix.P2PKHPrefix,
-			P2WPKHPrefix: decoder.wm.Config.TestNetAddressPrefix.P2WPKHPrefix,
-			Bech32Prefix: decoder.wm.Config.TestNetAddressPrefix.Bech32Prefix,
-		}
-	} else {
-		addressPrefix = omniTransaction.AddressPrefix{
-			P2PKHPrefix:  decoder.wm.Config.MainNetAddressPrefix.P2PKHPrefix,
-			P2WPKHPrefix: decoder.wm.Config.MainNetAddressPrefix.P2WPKHPrefix,
-			Bech32Prefix: decoder.wm.Config.MainNetAddressPrefix.Bech32Prefix,
-		}
+		sigPub = resetTransHashFunc(sigPub, utxo.Addr, i)
 	}
 
 	////////填充签名结果到空交易单
-	//  传入TxUnlock结构体的原因是： 解锁向脚本支付的UTXO时需要对应地址的赎回脚本， 当前案例的对应字段置为 "" 即可
-	signedTrans, err := omniTransaction.InsertSignatureIntoEmptyTransaction(emptyTrans, transHash, txUnlocks)
-	if err != nil {
-		return fmt.Errorf("transaction compose signatures failed")
-	}
-	//else {
-	//	//	fmt.Println("拼接后的交易单")
-	//	//	fmt.Println(signedTrans)
-	//	//}
-
 	/////////验证交易单
-	//验证时，对于公钥哈希地址，需要将对应的锁定脚本传入TxUnlock结构体
-
-	pass := omniTransaction.VerifyRawTransaction(signedTrans, txUnlocks, addressPrefix)
+	pass, signedTrans := hypercashTransaction.VerifyAndCombineTransaction(emptyTrans, sigPub)
 	if pass {
 		decoder.wm.Log.Debug("transaction verify passed")
 		rawTx.IsCompleted = true
@@ -970,10 +862,6 @@ func (decoder *TransactionDecoder) VerifyOmniRawTransaction(wrapper openwallet.W
 	} else {
 		decoder.wm.Log.Debug("transaction verify failed")
 		rawTx.IsCompleted = false
-
-		decoder.wm.Log.Warningf("[Sid: %s] signedTrans: %s", rawTx.Sid, signedTrans)
-		decoder.wm.Log.Warningf("[Sid: %s] txUnlocks: %+v", rawTx.Sid, txUnlocks)
-		decoder.wm.Log.Warningf("[Sid: %s] addressPrefix: %+v", rawTx.Sid, addressPrefix)
 	}
 
 	return nil
@@ -1152,17 +1040,17 @@ func (decoder *TransactionDecoder) createHCRawTransaction(
 ) error {
 
 	var (
-		err              error
-		vins             = make([]hcTransaction.Vin, 0)
-		vouts            = make([]hcTransaction.Vout, 0)
-		txUnlocks        = make([]hcTransaction.TxUnlock, 0)
+		err   error
+		vins  = make([]hypercashTransaction.Vin, 0)
+		vouts = make([]hypercashTransaction.Vout, 0)
+		//txUnlocks        = make([]hypercashTransaction.TxUnlock, 0)
 		totalSend        = decimal.New(0, 0)
 		destinations     = make([]string, 0)
 		accountTotalSent = decimal.Zero
 		txFrom           = make([]string, 0)
 		txTo             = make([]string, 0)
 		accountID        = rawTx.Account.AccountID
-		addressPrefix    hcTransaction.AddressPrefix
+		//addressPrefix    hypercashTransaction.AddressPrefix
 	)
 
 	if len(usedUTXO) == 0 {
@@ -1194,11 +1082,17 @@ func (decoder *TransactionDecoder) createHCRawTransaction(
 
 	//装配输入
 	for _, utxo := range usedUTXO {
-		in := hcTransaction.Vin{utxo.TxID, uint32(utxo.Vout)}
+		utxoAmount := common.StringNumToBigIntWithExp(utxo.Amount, decoder.wm.Decimal())
+		in := hypercashTransaction.Vin{
+			TxID:        utxo.TxID,
+			Vout:        uint32(utxo.Vout),
+			Tree:        hypercashTransaction.TxTreeRegular,
+			Amount:      utxoAmount.Uint64(),
+			LockScript:  utxo.ScriptPubKey,
+			BlockHeight: utxo.BlockHeight,
+			BlockIndex:  utxo.BlockIndex,
+		}
 		vins = append(vins, in)
-
-		txUnlock := hcTransaction.TxUnlock{LockScript: utxo.ScriptPubKey, SigType: hcTransaction.SigHashAll}
-		txUnlocks = append(txUnlocks, txUnlock)
 
 		txFrom = append(txFrom, fmt.Sprintf("%s:%s", utxo.Address, utxo.Amount))
 	}
@@ -1207,35 +1101,24 @@ func (decoder *TransactionDecoder) createHCRawTransaction(
 	for to, amount := range to {
 		txTo = append(txTo, fmt.Sprintf("%s:%s", to, amount.String()))
 		amount = amount.Shift(decoder.wm.Decimal())
-		out := hcTransaction.Vout{to, uint64(amount.IntPart())}
+		out := hypercashTransaction.Vout{
+			Address:         to,
+			Amount:          uint64(amount.IntPart()),
+			PkScriptVersion: hypercashTransaction.DefaultPkScriptVersion,
+		}
 		vouts = append(vouts, out)
 	}
 
 	//锁定时间
 	lockTime := uint32(0)
-
-	//追加手续费支持
-	replaceable := false
-
-	if decoder.wm.Config.IsTestNet {
-		addressPrefix = decoder.wm.Config.TestNetAddressPrefix
-	} else {
-		addressPrefix = decoder.wm.Config.MainNetAddressPrefix
-	}
+	expiry := hypercashTransaction.NoExpiryValue
 
 	/////////构建空交易单
-	emptyTrans, err := hcTransaction.CreateEmptyRawTransaction(vins, vouts, lockTime, replaceable, addressPrefix)
+	emptyTrans, transHash, err := hypercashTransaction.CreateEmptyTransactionAndHash(vins, vouts, lockTime, expiry)
 
 	if err != nil {
 		return fmt.Errorf("create transaction failed, unexpected error: %v", err)
 		//decoder.wm.Log.Error("构建空交易单失败")
-	}
-
-	////////构建用于签名的交易单哈希
-	transHash, err := hcTransaction.CreateRawTransactionHashForSig(emptyTrans, txUnlocks, decoder.wm.Config.SupportSegWit, addressPrefix)
-	if err != nil {
-		return fmt.Errorf("create transaction hash for sig failed, unexpected error: %v", err)
-		//decoder.wm.Log.Error("获取待签名交易单哈希失败")
 	}
 
 	rawTx.RawHex = emptyTrans
@@ -1249,25 +1132,14 @@ func (decoder *TransactionDecoder) createHCRawTransaction(
 
 	for i, txHash := range transHash {
 
-		var unlockAddr string
-
-		//txHash := transHash[i]
-
-		//判断是否是多重签名
-		if txHash.IsMultisig() {
-			//获取地址
-			//unlockAddr = txHash.GetMultiTxPubkeys() //返回hex数组
-		} else {
-			//获取地址
-			unlockAddr = txHash.GetNormalTxAddress() //返回hex串
-		}
+		unlockAddr := usedUTXO[i]
 		//获取hash值
-		beSignHex := txHash.GetTxHashHex()
+		beSignHex := txHash
 
 		decoder.wm.Log.Std.Debug("txHash[%d]: %s", i, beSignHex)
 		//beSignHex := transHash[i]
 
-		addr, err := wrapper.GetAddress(unlockAddr)
+		addr, err := wrapper.GetAddress(unlockAddr.Address)
 		if err != nil {
 			return err
 		}
@@ -1303,28 +1175,29 @@ func (decoder *TransactionDecoder) createOmniRawTransaction(
 	wrapper openwallet.WalletDAI,
 	rawTx *openwallet.RawTransaction,
 	usedUTXO []*Unspent,
-	coinTo map[string]decimal.Decimal,
+	coinTo *hypercashTransaction.Vout,
+	coinChange *hypercashTransaction.Vout,
 	omniTo map[string]string,
 ) error {
 
 	var (
-		err              error
-		vins             = make([]omniTransaction.Vin, 0)
-		vouts            = make([]omniTransaction.Vout, 0)
-		txUnlocks        = make([]omniTransaction.TxUnlock, 0)
+		err  error
+		vins = make([]hypercashTransaction.Vin, 0)
+		//vouts            = make([]hypercashTransaction.Vout, 0)
+		//txUnlocks        = make([]hypercashTransaction.TxUnlock, 0)
 		accountTotalSent = decimal.Zero
 		toAmount         = decimal.Zero
 		txFrom           = make([]string, 0)
 		txTo             = make([]string, 0)
 		accountID        = rawTx.Account.AccountID
-		addressPrefix    omniTransaction.AddressPrefix
+		//addressPrefix    hypercashTransaction.AddressPrefix
 	)
 
 	if len(usedUTXO) == 0 {
 		return fmt.Errorf("utxo is empty")
 	}
 
-	if len(coinTo) == 0 {
+	if coinTo == nil {
 		return fmt.Errorf("Receiver addresses is empty! ")
 	}
 
@@ -1359,68 +1232,33 @@ func (decoder *TransactionDecoder) createOmniRawTransaction(
 
 	//装配输入
 	for _, utxo := range usedUTXO {
-		in := omniTransaction.Vin{utxo.TxID, uint32(utxo.Vout)}
+		utxoAmount := common.StringNumToBigIntWithExp(utxo.Amount, decoder.wm.Decimal())
+		in := hypercashTransaction.Vin{
+			TxID:        utxo.TxID,
+			Vout:        uint32(utxo.Vout),
+			Tree:        hypercashTransaction.TxTreeRegular,
+			Amount:      utxoAmount.Uint64(),
+			LockScript:  utxo.ScriptPubKey,
+			BlockHeight: utxo.BlockHeight,
+			BlockIndex:  utxo.BlockIndex,
+		}
 		vins = append(vins, in)
-
-		txUnlock := omniTransaction.TxUnlock{LockScript: utxo.ScriptPubKey, SigType: hcTransaction.SigHashAll}
-		txUnlocks = append(txUnlocks, txUnlock)
 
 		//txFrom = append(txFrom, fmt.Sprintf("%s:%s", utxo.Address, utxo.Amount))
 	}
 
-	//装配输入
-	for to, amount := range coinTo {
-		amount = amount.Shift(decoder.wm.Decimal())
-		out := omniTransaction.Vout{to, uint64(amount.IntPart())}
-		vouts = append(vouts, out)
-
-		//txTo = append(txTo, fmt.Sprintf("%s:%s", to, amount))
-	}
-
-	if decoder.wm.Config.IsTestNet {
-		addressPrefix = omniTransaction.AddressPrefix{
-			P2PKHPrefix:  decoder.wm.Config.TestNetAddressPrefix.P2PKHPrefix,
-			P2WPKHPrefix: decoder.wm.Config.TestNetAddressPrefix.P2WPKHPrefix,
-			Bech32Prefix: decoder.wm.Config.TestNetAddressPrefix.Bech32Prefix,
-		}
-	} else {
-		addressPrefix = omniTransaction.AddressPrefix{
-			P2PKHPrefix:  decoder.wm.Config.MainNetAddressPrefix.P2PKHPrefix,
-			P2WPKHPrefix: decoder.wm.Config.MainNetAddressPrefix.P2WPKHPrefix,
-			Bech32Prefix: decoder.wm.Config.MainNetAddressPrefix.Bech32Prefix,
-		}
-	}
-
 	omniAmount := toAmount.Shift(tokenDecimals)
-
-	omniDetail := omniTransaction.OmniStruct{
-		TxType:     omniTransaction.SimpleSend,
-		PropertyId: uint32(propertyID),
-		Amount:     uint64(omniAmount.IntPart()),
-		Ecosystem:  0,
-		Address:    "",
-		Memo:       "",
-	}
 
 	//锁定时间
 	lockTime := uint32(0)
-
-	//追加手续费支持
-	replaceable := false
+	expiry := hypercashTransaction.NoExpiryValue
 
 	/////////构建空交易单
-	emptyTrans, err := omniTransaction.CreateEmptyRawTransaction(vins, vouts, omniDetail, lockTime, replaceable, addressPrefix)
+	emptyTrans, transHash, err := hypercashTransaction.CreateOmniEmptyTransactionAndHash(vins, coinTo, coinChange, uint64(omniAmount.IntPart()), uint32(propertyID), lockTime, expiry)
 
 	if err != nil {
 		return fmt.Errorf("create transaction failed, unexpected error: %v", err)
 		//decoder.wm.Log.Error("构建空交易单失败")
-	}
-
-	////////构建用于签名的交易单哈希
-	transHash, err := omniTransaction.CreateRawTransactionHashForSig(emptyTrans, txUnlocks, addressPrefix)
-	if err != nil {
-		return fmt.Errorf("create transaction hash for sig failed, unexpected error: %v", err)
-		//decoder.wm.Log.Error("获取待签名交易单哈希失败")
 	}
 
 	rawTx.RawHex = emptyTrans
@@ -1432,25 +1270,10 @@ func (decoder *TransactionDecoder) createOmniRawTransaction(
 
 	for i, txHash := range transHash {
 
-		var unlockAddr string
-
-		//txHash := transHash[i]
-
-		//判断是否是多重签名
-		if txHash.IsMultisig() {
-			//获取地址
-			//unlockAddr = txHash.GetMultiTxPubkeys() //返回hex数组
-		} else {
-			//获取地址
-			unlockAddr = txHash.GetNormalTxAddress() //返回hex串
-		}
-		//获取hash值
-		beSignHex := txHash.GetTxHashHex()
-
-		decoder.wm.Log.Std.Debug("txHash[%d]: %s", i, beSignHex)
+		decoder.wm.Log.Std.Debug("txHash[%d]: %s", i, txHash)
 		//beSignHex := transHash[i]
 
-		addr, err := wrapper.GetAddress(unlockAddr)
+		addr, err := wrapper.GetAddress(usedUTXO[i].Address)
 		if err != nil {
 			return err
 		}
@@ -1459,7 +1282,7 @@ func (decoder *TransactionDecoder) createOmniRawTransaction(
 			EccType: decoder.wm.Config.CurveType,
 			Nonce:   "",
 			Address: addr,
-			Message: beSignHex,
+			Message: txHash,
 		}
 
 		keySigs := signatures[addr.AccountID]
@@ -1564,6 +1387,8 @@ func (decoder *TransactionDecoder) CreateOmniSummaryRawTransaction(wrapper openw
 
 	for _, address := range address {
 
+		var coinChange *hypercashTransaction.Vout
+
 		//清空临时变量
 		outputAddrs = make(map[string]decimal.Decimal, 0)
 		ominOutputAddrs = make(map[string]string, 0)
@@ -1653,8 +1478,14 @@ func (decoder *TransactionDecoder) CreateOmniSummaryRawTransaction(wrapper openw
 			changeAmount = supportAmount.Add(addrBalance).Sub(totalCost)
 			if changeAmount.GreaterThan(decimal.Zero) {
 				//主币输出第二个地址为找零地址，找零主币
-				outputAddrs = appendOutput(outputAddrs, supportUnspent.Address, changeAmount)
+				//outputAddrs = appendOutput(outputAddrs, supportUnspent.Address, changeAmount)
 				//outputAddrs[supportUnspent.Address] = changeAmount.StringFixed(coinDecimals)
+
+				coinChange = &hypercashTransaction.Vout{
+					Address:         supportUnspent.Address,
+					Amount:          uint64(changeAmount.Shift(decoder.wm.Decimal()).IntPart()),
+					PkScriptVersion: hypercashTransaction.DefaultPkScriptVersion,
+				}
 			}
 
 			//删除已使用的utxo
@@ -1668,13 +1499,23 @@ func (decoder *TransactionDecoder) CreateOmniSummaryRawTransaction(wrapper openw
 				//主币输出第二个地址为找零地址，找零主币
 				outputAddrs = appendOutput(outputAddrs, address.Address, changeAmount)
 				//outputAddrs[address.Address] = changeAmount.StringFixed(coinDecimals)
+				coinChange = &hypercashTransaction.Vout{
+					Address:         address.Address,
+					Amount:          uint64(changeAmount.Shift(decoder.wm.Decimal()).IntPart()),
+					PkScriptVersion: hypercashTransaction.DefaultPkScriptVersion,
+				}
 			}
 
 		}
 
 		//主币输出第一个为汇总地址，把地址所有主币也汇总到汇总地址
-		outputAddrs = appendOutput(outputAddrs, sumRawTx.SummaryAddress, transferCost)
+		//outputAddrs = appendOutput(outputAddrs, sumRawTx.SummaryAddress, transferCost)
 		//outputAddrs[sumRawTx.SummaryAddress] = transferCost.StringFixed(coinDecimals)
+		coinTo := &hypercashTransaction.Vout{
+			Address:         sumRawTx.SummaryAddress,
+			Amount:          uint64(transferCost.Shift(decoder.wm.Decimal()).IntPart()),
+			PkScriptVersion: hypercashTransaction.DefaultPkScriptVersion,
+		}
 
 		//计算汇总数量
 		sumTokenAmount := tokenBalance.Sub(retainedBalance)
@@ -1697,7 +1538,7 @@ func (decoder *TransactionDecoder) CreateOmniSummaryRawTransaction(wrapper openw
 			Required: 1,
 		}
 
-		createTxErr := decoder.createOmniRawTransaction(wrapper, rawTx, unspents, outputAddrs, ominOutputAddrs)
+		createTxErr := decoder.createOmniRawTransaction(wrapper, rawTx, unspents, coinTo, coinChange, ominOutputAddrs)
 		rawTxWithErr := &openwallet.RawTransactionWithError{
 			RawTx: rawTx,
 			Error: openwallet.ConvertError(createTxErr),
@@ -1749,7 +1590,7 @@ func (decoder *TransactionDecoder) getAssetsAccountUnspents(wrapper openwallet.W
 //keepOmniCostUTXONotToUse，保留1个omni的最低转账成本的utxo 用于汇总omni
 func (decoder *TransactionDecoder) keepOmniCostUTXONotToUse(unspents []*Unspent) []*Unspent {
 
-	if !decoder.wm.Config.SupportSegWit {
+	if !decoder.wm.Config.OmniSupport {
 		return unspents
 	}
 
@@ -1832,13 +1673,13 @@ func appendOutput(output map[string]decimal.Decimal, address string, amount deci
 }
 
 //根据交易输入地址顺序重排交易hash
-func resetTransHashFunc(origins []omniTransaction.TxHash, addr string, start int) []omniTransaction.TxHash {
-	newHashs := make([]omniTransaction.TxHash, start)
+func resetTransHashFunc(origins []*hypercashTransaction.SigPub, addr string, start int) []*hypercashTransaction.SigPub {
+	newHashs := make([]*hypercashTransaction.SigPub, start)
 	copy(newHashs, origins[:start])
 	end := 0
 	for i := start; i < len(origins); i++ {
 		h := origins[i]
-		if h.GetNormalTxAddress() == addr {
+		if h.Address == addr {
 			newHashs = append(newHashs, h)
 			end = i
 			break

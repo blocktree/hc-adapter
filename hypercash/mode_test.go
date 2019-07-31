@@ -1,4 +1,4 @@
-package hc
+package hypercash
 
 import (
 	"encoding/hex"
