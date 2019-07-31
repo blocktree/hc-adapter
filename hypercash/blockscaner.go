@@ -42,18 +42,18 @@ const (
 type HCBlockScanner struct {
 	*openwallet.BlockScannerBase
 
-	CurrentBlockHeight   uint64             //当前区块高度
-	extractingCH         chan struct{}      //扫描工作令牌
-	wm                   *WalletManager     //钱包管理者
-	IsScanMemPool        bool               //是否扫描交易池
-	RescanLastBlockCount uint64             //重扫上N个区块数量
+	CurrentBlockHeight   uint64         //当前区块高度
+	extractingCH         chan struct{}  //扫描工作令牌
+	wm                   *WalletManager //钱包管理者
+	IsScanMemPool        bool           //是否扫描交易池
+	RescanLastBlockCount uint64         //重扫上N个区块数量
 	//socketIO             *gosocketio.Client //socketIO客户端
 	//setupSocketIOOnce    sync.Once
 	//stopSocketIO         chan struct{}
 
 	//用于实现浏览器
-	IsSkipFailedBlock bool                                    //是否跳过失败区块
-	HCBlockObservers map[HCBlockScanNotificationObject]bool //观察者
+	IsSkipFailedBlock bool                                   //是否跳过失败区块
+	HCBlockObservers  map[HCBlockScanNotificationObject]bool //观察者
 }
 
 //ExtractResult 扫描完成的提取结果
@@ -153,6 +153,21 @@ func (bs *HCBlockScanner) ScanBlockTask() {
 			//下一个高度找不到会报异常
 			bs.wm.Log.Std.Info("block scanner can not get new block hash; unexpected error: %v", err)
 			break
+		}
+
+		if bs.wm.Config.OmniSupport {
+			//判断omni的区块高度是否一致
+			omniBlockHash, err := bs.wm.GetOmniBlockHash(currentHeight)
+			if err != nil {
+				bs.wm.Log.Std.Error("omni block is not synced to the same height of mainnet")
+				return
+			}
+
+			//判断omni的hash是否与hc节点的hash一致
+			if omniBlockHash != hash {
+				bs.wm.Log.Std.Error("omni block is not synced to the same hash of mainnet")
+				return
+			}
 		}
 
 		block, err := bs.wm.GetBlock(hash)
