@@ -1497,10 +1497,12 @@ func (decoder *TransactionDecoder) CreateOmniSummaryRawTransaction(wrapper openw
 			changeAmount = addrBalance.Sub(totalCost)
 			if changeAmount.GreaterThan(decimal.Zero) {
 				//主币输出第二个地址为找零地址，找零主币
-				outputAddrs = appendOutput(outputAddrs, address.Address, changeAmount)
+				outputAddrs = appendOutput(outputAddrs, sumRawTx.SummaryAddress, changeAmount)
+				//outputAddrs = appendOutput(outputAddrs, address.Address, changeAmount)
 				//outputAddrs[address.Address] = changeAmount.StringFixed(coinDecimals)
 				coinChange = &hypercashTransaction.Vout{
-					Address:         address.Address,
+					//Address:         address.Address,
+					Address:         sumRawTx.SummaryAddress,
 					Amount:          uint64(changeAmount.Shift(decoder.wm.Decimal()).IntPart()),
 					PkScriptVersion: hypercashTransaction.DefaultPkScriptVersion,
 				}

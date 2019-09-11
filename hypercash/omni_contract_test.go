@@ -38,7 +38,7 @@ func TestWalletManager_IsHaveOmniAssets(t *testing.T) {
 }
 
 func TestWalletManager_GetOmniTransaction(t *testing.T) {
-	txid := "300142e7f87bf669b09079cf25985f773ab4065498b15e51498533b949e054a0"
+	txid := "0244db052f01a788e9f582b5c1ae8ecc1f0dbdbaba6f3e03d21d92f3db243553"
 	transaction, err := tw.GetOmniTransaction(txid)
 	if err != nil {
 		t.Errorf("GetOmniBalance failed unexpected error: %v\n", err)

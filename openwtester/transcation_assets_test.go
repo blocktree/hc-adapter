@@ -121,7 +121,7 @@ func testSubmitTransactionStep(tm *openw.WalletManager, rawTx *openwallet.RawTra
 func TestTransfer(t *testing.T) {
 
 	targets := []string{
-		//"HsQ5KuGEL3Fc2ZgZyKGcxcgVM9hHyemze3S",
+		"HsPK4JHnCWYtfTt1eE8WPir516AAduF3Ujy",
 		//"HsEYgLiLKhsDGC4vQQrrihbUz7FkNHuTocM",
 		//"HsaUZ7SFk64c7TuB7ob5mXQAUwLPDkPBqX1",
 		//"HsCvRfC8dcWxE3XJur838HvMn57ggQqeqTY",
@@ -129,14 +129,14 @@ func TestTransfer(t *testing.T) {
 		//"HsC2XDBCvxu4Z8nmWSVtLoZrCGiznRK2mpr",
 		//"HsCa6TzmeZePB1X33wWyYcsUKX9sU62fB2f",
 
-		"HsJ6JsrjDPU2qY2ZcEoCHYBdUQJfR62eGXk",
-		"HsMLhsVkfn7JE975UR9XgWUiwZnr7Z7LAdu",
-		"HsMdbYpmddsj28PWwmntoPd2vTMgvXMbz1r",
-		"HsQUwGwXSGwnAcUcbpMJ9ZzwW9ZXBUE5ipk",
-		"HsE5VtHLKHQU6YN9USwNsp9CM1F6Lvvwrr3",
-		"HsXvJCuoqSPjXJkrBVYbYGkmnpzhaXssADB",
-		"HsLvBsLPXmrcbbumEHtEqi7mrgN2DWCoeCG",
-		"HsKqiid6qzobxJZA5n3cxtFhMfTvfjAeAJ4",
+		//"HsJ6JsrjDPU2qY2ZcEoCHYBdUQJfR62eGXk",
+		//"HsMLhsVkfn7JE975UR9XgWUiwZnr7Z7LAdu",
+		//"HsMdbYpmddsj28PWwmntoPd2vTMgvXMbz1r",
+		//"HsQUwGwXSGwnAcUcbpMJ9ZzwW9ZXBUE5ipk",
+		//"HsE5VtHLKHQU6YN9USwNsp9CM1F6Lvvwrr3",
+		//"HsXvJCuoqSPjXJkrBVYbYGkmnpzhaXssADB",
+		//"HsLvBsLPXmrcbbumEHtEqi7mrgN2DWCoeCG",
+		//"HsKqiid6qzobxJZA5n3cxtFhMfTvfjAeAJ4",
 	}
 
 	tm := testInitWalletManager()
@@ -148,7 +148,7 @@ func TestTransfer(t *testing.T) {
 
 	for _, to := range targets {
 
-		rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "3", "", nil)
+		rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "1", "", nil)
 		if err != nil {
 			return
 		}
@@ -186,16 +186,16 @@ func TestTransfer_OMNI(t *testing.T) {
 		//"HsC2XDBCvxu4Z8nmWSVtLoZrCGiznRK2mpr",
 		//"HsCa6TzmeZePB1X33wWyYcsUKX9sU62fB2f",
 
-		"HsJ6JsrjDPU2qY2ZcEoCHYBdUQJfR62eGXk",
-		"HsMLhsVkfn7JE975UR9XgWUiwZnr7Z7LAdu",
-		"HsMdbYpmddsj28PWwmntoPd2vTMgvXMbz1r",
-		"HsQUwGwXSGwnAcUcbpMJ9ZzwW9ZXBUE5ipk",
-		"HsE5VtHLKHQU6YN9USwNsp9CM1F6Lvvwrr3",
-		"HsXvJCuoqSPjXJkrBVYbYGkmnpzhaXssADB",
-		"HsLvBsLPXmrcbbumEHtEqi7mrgN2DWCoeCG",
-		"HsKqiid6qzobxJZA5n3cxtFhMfTvfjAeAJ4",
+		//"HsJ6JsrjDPU2qY2ZcEoCHYBdUQJfR62eGXk",
+		//"HsMLhsVkfn7JE975UR9XgWUiwZnr7Z7LAdu",
+		//"HsMdbYpmddsj28PWwmntoPd2vTMgvXMbz1r",
+		//"HsQUwGwXSGwnAcUcbpMJ9ZzwW9ZXBUE5ipk",
+		//"HsE5VtHLKHQU6YN9USwNsp9CM1F6Lvvwrr3",
+		//"HsXvJCuoqSPjXJkrBVYbYGkmnpzhaXssADB",
+		//"HsLvBsLPXmrcbbumEHtEqi7mrgN2DWCoeCG",
+		//"HsKqiid6qzobxJZA5n3cxtFhMfTvfjAeAJ4",
 
-		//"HsQyU48VkSaUyK2gBRUbqBtBqjBy8yDDyF1",
+		"HsPK4JHnCWYtfTt1eE8WPir516AAduF3Ujy",
 	}
 
 	tm := testInitWalletManager()
@@ -216,7 +216,7 @@ func TestTransfer_OMNI(t *testing.T) {
 	testGetAssetsAccountTokenBalance(tm, walletID, accountID, contract)
 
 	for _, to := range targets {
-		rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "5", "", &contract)
+		rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "10", "", &contract)
 		if err != nil {
 			return
 		}
