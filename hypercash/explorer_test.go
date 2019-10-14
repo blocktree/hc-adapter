@@ -37,7 +37,7 @@ func TestGetBlockHeightByExplorer(t *testing.T) {
 }
 
 func TestGetBlockHashByExplorer(t *testing.T) {
-	hash, err := tw.getBlockHashByExplorer(203419)
+	hash, err := tw.getBlockHashByExplorer(238383)
 	if err != nil {
 		t.Errorf("getBlockHashByExplorer failed unexpected error: %v\n", err)
 		return
