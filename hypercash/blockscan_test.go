@@ -16,10 +16,7 @@
 package hypercash
 
 import (
-	"github.com/asdine/storm"
-	"github.com/blocktree/openwallet/log"
 	"github.com/pborman/uuid"
-	"path/filepath"
 	"testing"
 )
 
@@ -48,7 +45,7 @@ func TestGetBlockHeight(t *testing.T) {
 //371739
 //00000079cde0fc3fa55cd65e6388c4bafb9476f78482550dc204fb77966ab8a1
 func TestGetLocalNewBlock(t *testing.T) {
-	height, hash := tw.GetLocalNewBlock()
+	height, hash, _ := tw.Blockscanner.GetLocalNewBlock()
 	t.Logf("GetLocalBlockHeight height = %d \n", height)
 	t.Logf("GetLocalBlockHeight hash = %v \n", hash)
 }
@@ -58,7 +55,7 @@ func TestSaveLocalBlockHeight(t *testing.T) {
 	header, _ := bs.GetCurrentBlockHeader()
 	t.Logf("SaveLocalBlockHeight height = %d \n", header.Height)
 	t.Logf("GetLocalBlockHeight hash = %v \n", header.Hash)
-	tw.SaveLocalNewBlock(header.Height, header.Hash)
+	tw.Blockscanner.SaveLocalNewBlock(header.Height, header.Hash)
 }
 
 func TestGetBlockHash(t *testing.T) {
@@ -231,7 +228,7 @@ func TestWallet_GetRecharges(t *testing.T) {
 //}
 
 func TestGetUnscanRecords(t *testing.T) {
-	list, err := tw.GetUnscanRecords()
+	list, err := tw.Blockscanner.GetUnscanRecords()
 	if err != nil {
 		t.Errorf("GetUnscanRecords failed unexpected error: %v\n", err)
 		return
@@ -272,18 +269,3 @@ func TestHCBlockScanner_GetTransactionsByAddress(t *testing.T) {
 
 }
 
-func TestGetLocalBlock(t *testing.T) {
-	db, err := storm.Open(filepath.Join(tw.Config.dbPath, tw.Config.BlockchainFile))
-	if err != nil {
-		return
-	}
-	defer db.Close()
-
-	var blocks []*Block
-	err = db.All(&blocks)
-	if err != nil {
-		log.Error("no find")
-		return
-	}
-	log.Info("blocks = ", len(blocks))
-}

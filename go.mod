@@ -10,7 +10,7 @@ require (
 	github.com/astaxie/beego v1.11.1
 	github.com/blocktree/go-owcdrivers v1.1.16
 	github.com/blocktree/go-owcrypt v1.0.3
-	github.com/blocktree/openwallet v1.4.8
+	github.com/blocktree/openwallet v1.5.5
 	github.com/bndr/gotabulate v1.1.2
 	github.com/codeskyblue/go-sh v0.0.0-20190328095946-f4ce45e7999e
 	github.com/dchest/blake256 v1.0.0 // indirect
