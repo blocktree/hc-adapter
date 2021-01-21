@@ -85,7 +85,7 @@ func TestWalletManager_GetOmniBlockHeight(t *testing.T) {
 }
 
 func TestWalletManager_GetOmniBlockHash(t *testing.T) {
-	blockheight, err := tw.GetOmniBlockHash(206290)
+	blockheight, err := tw.GetOmniBlockHash(279992)
 	if err != nil {
 		t.Errorf("GetOmniBlockHeight failed unexpected error: %v\n", err)
 		return

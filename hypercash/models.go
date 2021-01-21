@@ -18,7 +18,7 @@ package hypercash
 import (
 	"encoding/hex"
 	"github.com/HcashOrg/hcd/txscript"
-	"github.com/blocktree/openwallet/openwallet"
+	"github.com/blocktree/openwallet/v2/openwallet"
 	"github.com/tidwall/gjson"
 	"strings"
 )

@@ -17,10 +17,10 @@ package openwtester
 
 import (
 	"github.com/astaxie/beego/config"
-	"github.com/blocktree/openwallet/common/file"
-	"github.com/blocktree/openwallet/log"
-	"github.com/blocktree/openwallet/openw"
-	"github.com/blocktree/openwallet/openwallet"
+	"github.com/blocktree/openwallet/v2/common/file"
+	"github.com/blocktree/openwallet/v2/log"
+	"github.com/blocktree/openwallet/v2/openw"
+	"github.com/blocktree/openwallet/v2/openwallet"
 	"path/filepath"
 	"testing"
 )
@@ -53,24 +53,25 @@ func (sub *subscriberSingle) BlockExtractDataNotify(sourceKey string, data *open
 	return nil
 }
 
+//BlockExtractSmartContractDataNotify 区块提取智能合约交易结果通知
+func (sub *subscriberSingle) BlockExtractSmartContractDataNotify(sourceKey string, data *openwallet.SmartContractReceipt) error {
+	return nil
+}
+
 func TestSubscribeAddress_HC(t *testing.T) {
 
 	var (
 		endRunning = make(chan bool, 1)
 		symbol     = "HC"
 		addrs      = map[string]string{
-			"HsGvJmdYdjeGNgXqt3jtMuAn65QrMCL3e6u": "sender",
-			"HsFVX4Y1wikYjzfZrWKSsnQqPPpiuTuu6KW": "receiver",
+			"HsZtkiuPbdJ2zMeeshrC1RMzaZwHtRfUfkd": "sender",
+			"HsapUhYyQrwgyXZbNuDUmGtzhVRCftpTHFo": "receiver",
 		}
 	)
 
-	//GetSourceKeyByAddress 获取地址对应的数据源标识
-	scanAddressFunc := func(address string) (string, bool) {
-		key, ok := addrs[address]
-		if !ok {
-			return "", false
-		}
-		return key, true
+	scanTargetFunc := func(target openwallet.ScanTargetParam) openwallet.ScanTargetResult {
+		sourceKey, ok := addrs[target.ScanTarget]
+		return openwallet.ScanTargetResult{SourceKey: sourceKey, Exist: ok, TargetInfo: nil,}
 	}
 
 	assetsMgr, err := openw.GetAssetsAdapter(symbol)
@@ -107,14 +108,14 @@ func TestSubscribeAddress_HC(t *testing.T) {
 
 		scanner.SetBlockchainDAI(dai)
 	}
-	//scanner.SetRescanBlockHeight(207900)
+	scanner.SetRescanBlockHeight(513978)
 
 	if scanner == nil {
 		log.Error(symbol, "is not support block scan")
 		return
 	}
 
-	scanner.SetBlockScanAddressFunc(scanAddressFunc)
+	scanner.SetBlockScanTargetFuncV2(scanTargetFunc)
 
 	sub := subscriberSingle{}
 	scanner.AddObserver(&sub)
@@ -122,7 +123,5 @@ func TestSubscribeAddress_HC(t *testing.T) {
 	scanner.Run()
 
 	<-endRunning
-
-
 
 }

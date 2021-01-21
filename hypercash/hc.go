@@ -19,11 +19,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego/config"
-	"github.com/blocktree/openwallet/common"
-	"github.com/blocktree/openwallet/console"
-	"github.com/blocktree/openwallet/log"
-	"github.com/blocktree/openwallet/openwallet"
-	"github.com/blocktree/openwallet/timer"
+	"github.com/blocktree/openwallet/v2/common"
+	"github.com/blocktree/openwallet/v2/console"
+	"github.com/blocktree/openwallet/v2/log"
+	"github.com/blocktree/openwallet/v2/openwallet"
+	"github.com/blocktree/openwallet/v2/timer"
 	"github.com/shopspring/decimal"
 	"path/filepath"
 	"strings"
@@ -519,13 +519,13 @@ func (wm *WalletManager) GetTransactionDecoder() openwallet.TransactionDecoder {
 //GetBlockScanner 获取区块链
 func (wm *WalletManager) GetBlockScanner() openwallet.BlockScanner {
 
-		//先加载是否有配置文件
-		//err := wm.LoadConfig()
-		//if err != nil {
-		//	return nil
-		//}
+	//先加载是否有配置文件
+	//err := wm.LoadConfig()
+	//if err != nil {
+	//	return nil
+	//}
 
-		return wm.Blockscanner
+	return wm.Blockscanner
 }
 
 //ImportWatchOnlyAddress 导入观测地址

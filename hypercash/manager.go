@@ -32,11 +32,11 @@ import (
 	"github.com/asdine/storm/q"
 	"github.com/astaxie/beego/config"
 	"github.com/blocktree/go-owcdrivers/owkeychain"
-	"github.com/blocktree/openwallet/common"
-	"github.com/blocktree/openwallet/common/file"
-	"github.com/blocktree/openwallet/hdkeystore"
-	"github.com/blocktree/openwallet/log"
-	"github.com/blocktree/openwallet/openwallet"
+	"github.com/blocktree/openwallet/v2/common"
+	"github.com/blocktree/openwallet/v2/common/file"
+	"github.com/blocktree/openwallet/v2/hdkeystore"
+	"github.com/blocktree/openwallet/v2/log"
+	"github.com/blocktree/openwallet/v2/openwallet"
 	"github.com/bndr/gotabulate"
 	"github.com/codeskyblue/go-sh"
 	"github.com/shopspring/decimal"
@@ -239,16 +239,15 @@ func (wm *WalletManager) ImportMulti(addresses []*openwallet.Address, keys []str
 }
 
 //GetCoreWalletinfo 获取核心钱包节点信息
-func (wm *WalletManager) GetCoreWalletinfo() (string,error) {
+func (wm *WalletManager) GetCoreWalletinfo() (string, error) {
 
 	res, err := wm.WalletClient.Call("walletinfo", nil)
 
 	if err != nil {
-		return "",err
+		return "", err
 	}
 
-
-	return res.String(),err
+	return res.String(), err
 
 }
 
@@ -735,7 +734,7 @@ func (wm *WalletManager) CreateNewPrivateKey(accountID string, key *owkeychain.E
 	//	CreatedAt: time.Now(),
 	//}
 
-	return "",nil, nil
+	return "", nil, nil
 }
 
 //CreateBatchPrivateKey

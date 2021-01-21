@@ -22,8 +22,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/blocktree/openwallet/common"
-	"github.com/blocktree/openwallet/openwallet"
+	"github.com/blocktree/openwallet/v2/common"
+	"github.com/blocktree/openwallet/v2/openwallet"
 	"github.com/shopspring/decimal"
 )
 
@@ -490,7 +490,7 @@ func (bs *HCBlockScanner) BatchExtractTransaction(blockHeight uint64, blockHash 
 			go func(mBlockHeight uint64, mTxid string, end chan struct{}, mProducer chan<- ExtractResult) {
 
 				//导出提出的交易
-				mProducer <- bs.ExtractTransaction(mBlockHeight, eBlockHash, mTxid, bs.ScanAddressFunc)
+				mProducer <- bs.ExtractTransaction(mBlockHeight, eBlockHash, mTxid, bs.ScanTargetFuncV2)
 				//释放
 				<-end
 
@@ -555,7 +555,7 @@ func (bs *HCBlockScanner) extractRuntime(producer chan ExtractResult, worker cha
 }
 
 //ExtractTransaction 提取交易单
-func (bs *HCBlockScanner) ExtractTransaction(blockHeight uint64, blockHash string, txid string, scanAddressFunc openwallet.BlockScanAddressFunc) ExtractResult {
+func (bs *HCBlockScanner) ExtractTransaction(blockHeight uint64, blockHash string, txid string, scanAddressFunc openwallet.BlockScanTargetFuncV2) ExtractResult {
 
 	var (
 		result = ExtractResult{
@@ -603,7 +603,7 @@ func (bs *HCBlockScanner) ExtractTransaction(blockHeight uint64, blockHash strin
 }
 
 //extractOmniTransaction 提取Omni交易单
-func (bs *HCBlockScanner) extractOmniTransaction(trx *OmniTransaction, result *ExtractResult, scanAddressFunc openwallet.BlockScanAddressFunc) {
+func (bs *HCBlockScanner) extractOmniTransaction(trx *OmniTransaction, result *ExtractResult, scanAddressFunc openwallet.BlockScanTargetFuncV2) {
 
 	var (
 		success = true
@@ -633,8 +633,13 @@ func (bs *HCBlockScanner) extractOmniTransaction(trx *OmniTransaction, result *E
 			amountDec, _ := decimal.NewFromString(trx.Amount)
 			amountDec = amountDec.Shift(bs.wm.Decimal())
 			amount := amountDec.StringFixed(0)
-			sourceKey, ok := scanAddressFunc(trx.SendingAddress)
-			if ok {
+			targetResult := scanAddressFunc(openwallet.ScanTargetParam{
+				ScanTarget:     trx.SendingAddress,
+				Symbol:         bs.wm.Symbol(),
+				ScanTargetType: openwallet.ScanTargetTypeAccountAddress})
+			if targetResult.Exist {
+			//sourceKey, ok := scanAddressFunc(trx.SendingAddress)
+			//if ok {
 				input := openwallet.TxInput{}
 				input.TxID = trx.TxID
 				input.Address = trx.SendingAddress
@@ -651,18 +656,23 @@ func (bs *HCBlockScanner) extractOmniTransaction(trx *OmniTransaction, result *E
 
 				//transactions = append(transactions, &transaction)
 
-				ed := result.extractOmniData[sourceKey]
+				ed := result.extractOmniData[targetResult.SourceKey]
 				if ed == nil {
 					ed = openwallet.NewBlockExtractData()
-					result.extractOmniData[sourceKey] = ed
+					result.extractOmniData[targetResult.SourceKey] = ed
 				}
 
 				ed.TxInputs = append(ed.TxInputs, &input)
 
 			}
 
-			sourceKey2, ok2 := scanAddressFunc(trx.ReferenceAddress)
-			if ok2 {
+			targetResult2 := scanAddressFunc(openwallet.ScanTargetParam{
+				ScanTarget:     trx.ReferenceAddress,
+				Symbol:         bs.wm.Symbol(),
+				ScanTargetType: openwallet.ScanTargetTypeAccountAddress})
+			if targetResult2.Exist {
+			//sourceKey2, ok2 := scanAddressFunc(trx.ReferenceAddress)
+			//if ok2 {
 				output := openwallet.TxOutPut{}
 				output.TxID = trx.TxID
 				output.Address = trx.ReferenceAddress
@@ -680,10 +690,10 @@ func (bs *HCBlockScanner) extractOmniTransaction(trx *OmniTransaction, result *E
 
 				//transactions = append(transactions, &transaction)
 
-				ed := result.extractOmniData[sourceKey2]
+				ed := result.extractOmniData[targetResult2.SourceKey]
 				if ed == nil {
 					ed = openwallet.NewBlockExtractData()
-					result.extractOmniData[sourceKey2] = ed
+					result.extractOmniData[targetResult2.SourceKey] = ed
 				}
 
 				ed.TxOutputs = append(ed.TxOutputs, &output)
@@ -721,7 +731,7 @@ func (bs *HCBlockScanner) extractOmniTransaction(trx *OmniTransaction, result *E
 }
 
 //ExtractTransactionData 提取交易单
-func (bs *HCBlockScanner) extractTransaction(trx *Transaction, result *ExtractResult, scanAddressFunc openwallet.BlockScanAddressFunc) {
+func (bs *HCBlockScanner) extractTransaction(trx *Transaction, result *ExtractResult, scanAddressFunc openwallet.BlockScanTargetFuncV2) {
 
 	var (
 		success = true
@@ -814,7 +824,7 @@ func (bs *HCBlockScanner) extractTransaction(trx *Transaction, result *ExtractRe
 }
 
 //ExtractTxInput 提取交易单输入部分
-func (bs *HCBlockScanner) extractTxInput(trx *Transaction, result *ExtractResult, scanAddressFunc openwallet.BlockScanAddressFunc) ([]string, decimal.Decimal) {
+func (bs *HCBlockScanner) extractTxInput(trx *Transaction, result *ExtractResult, scanAddressFunc openwallet.BlockScanTargetFuncV2) ([]string, decimal.Decimal) {
 
 	//vin := trx.Get("vin")
 
@@ -838,8 +848,13 @@ func (bs *HCBlockScanner) extractTxInput(trx *Transaction, result *ExtractResult
 
 		amount := output.Value
 		addr := output.Addr
-		sourceKey, ok := scanAddressFunc(addr)
-		if ok {
+		targetResult := scanAddressFunc(openwallet.ScanTargetParam{
+			ScanTarget:     addr,
+			Symbol:         bs.wm.Symbol(),
+			ScanTargetType: openwallet.ScanTargetTypeAccountAddress})
+		if targetResult.Exist {
+		//sourceKey, ok := scanAddressFunc(addr)
+		//if ok {
 			input := openwallet.TxInput{}
 			input.SourceTxID = txid
 			input.SourceIndex = vout
@@ -861,10 +876,10 @@ func (bs *HCBlockScanner) extractTxInput(trx *Transaction, result *ExtractResult
 
 			//transactions = append(transactions, &transaction)
 
-			ed := result.extractData[sourceKey]
+			ed := result.extractData[targetResult.SourceKey]
 			if ed == nil {
 				ed = openwallet.NewBlockExtractData()
-				result.extractData[sourceKey] = ed
+				result.extractData[targetResult.SourceKey] = ed
 			}
 
 			ed.TxInputs = append(ed.TxInputs, &input)
@@ -880,7 +895,7 @@ func (bs *HCBlockScanner) extractTxInput(trx *Transaction, result *ExtractResult
 }
 
 //ExtractTxInput 提取交易单输入部分
-func (bs *HCBlockScanner) extractTxOutput(trx *Transaction, result *ExtractResult, scanAddressFunc openwallet.BlockScanAddressFunc) ([]string, decimal.Decimal) {
+func (bs *HCBlockScanner) extractTxOutput(trx *Transaction, result *ExtractResult, scanAddressFunc openwallet.BlockScanTargetFuncV2) ([]string, decimal.Decimal) {
 
 	var (
 		to          = make([]string, 0)
@@ -897,8 +912,14 @@ func (bs *HCBlockScanner) extractTxOutput(trx *Transaction, result *ExtractResul
 		amount := output.Value
 		n := output.N
 		addr := output.Addr
-		sourceKey, ok := scanAddressFunc(addr)
-		if ok {
+
+		targetResult := scanAddressFunc(openwallet.ScanTargetParam{
+			ScanTarget:     addr,
+			Symbol:         bs.wm.Symbol(),
+			ScanTargetType: openwallet.ScanTargetTypeAccountAddress})
+		if targetResult.Exist {
+			//sourceKey, ok := scanAddressFunc(addr)
+			//if ok {
 
 			//a := wallet.GetAddress(addr)
 			//if a == nil {
@@ -927,10 +948,10 @@ func (bs *HCBlockScanner) extractTxOutput(trx *Transaction, result *ExtractResul
 
 			//transactions = append(transactions, &transaction)
 
-			ed := result.extractData[sourceKey]
+			ed := result.extractData[targetResult.SourceKey]
 			if ed == nil {
 				ed = openwallet.NewBlockExtractData()
-				result.extractData[sourceKey] = ed
+				result.extractData[targetResult.SourceKey] = ed
 			}
 
 			ed.TxOutputs = append(ed.TxOutputs, &outPut)
@@ -1101,14 +1122,19 @@ func (bs *HCBlockScanner) GetScannedBlockHeight() uint64 {
 
 func (bs *HCBlockScanner) ExtractTransactionData(txid string, scanTargetFunc openwallet.BlockScanTargetFunc) (map[string][]*openwallet.TxExtractData, error) {
 
-	scanAddressFunc := func(address string) (string, bool) {
-		target := openwallet.ScanTarget{
-			Address:          address,
-			BalanceModelType: openwallet.BalanceModelTypeAddress,
+	scanTargetFuncV2 := func(target openwallet.ScanTargetParam) openwallet.ScanTargetResult {
+		sourceKey, ok := scanTargetFunc(openwallet.ScanTarget{
+			Address:          target.ScanTarget,
+			Symbol:           bs.wm.Symbol(),
+			BalanceModelType: bs.wm.BalanceModelType(),
+		})
+		return openwallet.ScanTargetResult{
+			SourceKey: sourceKey,
+			Exist:     ok,
 		}
-		return scanTargetFunc(target)
 	}
-	result := bs.ExtractTransaction(0, "", txid, scanAddressFunc)
+
+	result := bs.ExtractTransaction(0, "", txid, scanTargetFuncV2)
 	if !result.Success {
 		return nil, fmt.Errorf("extract transaction failed")
 	}
@@ -1576,7 +1602,6 @@ func (wm *WalletManager) calculateUnspent(utxos []*Unspent) map[string]*openwall
 	return addrBalanceMap
 
 }
-
 
 //SupportBlockchainDAI 支持外部设置区块链数据访问接口
 //@optional

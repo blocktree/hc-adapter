@@ -18,7 +18,7 @@ package hypercash
 import (
 	"fmt"
 	"github.com/astaxie/beego/config"
-	"github.com/blocktree/openwallet/log"
+	"github.com/blocktree/openwallet/v2/log"
 	"github.com/codeskyblue/go-sh"
 	"github.com/shopspring/decimal"
 	"math"
@@ -173,7 +173,6 @@ func TestGetWalletBalance(t *testing.T) {
 			name: "W5aQbddWii7ozwWGCzEiej8oagVNqChEoM",
 			tag:  "first",
 		},
-
 	}
 
 	for i, test := range tests {
@@ -185,46 +184,46 @@ func TestGetWalletBalance(t *testing.T) {
 
 func TestCreateNewPrivateKey(t *testing.T) {
 
-/*	test := struct {
-		name     string
-		password string
-		tag      string
-	}{
-		name:     "WDHupMjR3cR2wm97iDtKajxSPCYEEddoek",
-		password: "1234qwer",
-	}
-
-	count := 100
-
-	w, err := tw.GetWalletInfo(test.name)
-	if err != nil {
-		t.Errorf("CreateNewPrivateKey failed unexpected error: %v\n", err)
-		return
-	}
-
-	key, err := w.HDKey(test.password)
-	if err != nil {
-		t.Errorf("CreateNewPrivateKey failed unexpected error: %v\n", err)
-		return
-	}
-
-	timestamp := 1
-	t.Logf("CreateNewPrivateKey timestamp = %v \n", timestamp)
-
-	derivedPath := fmt.Sprintf("%s/%d", key.RootPath, timestamp)
-	childKey, _ := key.DerivedKeyWithPath(derivedPath, tw.Config.CurveType)
-
-	for i := 0; i < count; i++ {
-
-		wif, a, err := tw.CreateNewPrivateKey(key.KeyID, childKey, derivedPath, uint64(i))
-		if err != nil {
-			t.Errorf("CreateNewPrivateKey[%d] failed unexpected error: %v\n", i, err)
-			continue
+	/*	test := struct {
+			name     string
+			password string
+			tag      string
+		}{
+			name:     "WDHupMjR3cR2wm97iDtKajxSPCYEEddoek",
+			password: "1234qwer",
 		}
 
-		t.Logf("CreateNewPrivateKey[%d] wif = %v \n", i, wif)
-		t.Logf("CreateNewPrivateKey[%d] address = %v \n", i, a.Address)
-	}*/
+		count := 100
+
+		w, err := tw.GetWalletInfo(test.name)
+		if err != nil {
+			t.Errorf("CreateNewPrivateKey failed unexpected error: %v\n", err)
+			return
+		}
+
+		key, err := w.HDKey(test.password)
+		if err != nil {
+			t.Errorf("CreateNewPrivateKey failed unexpected error: %v\n", err)
+			return
+		}
+
+		timestamp := 1
+		t.Logf("CreateNewPrivateKey timestamp = %v \n", timestamp)
+
+		derivedPath := fmt.Sprintf("%s/%d", key.RootPath, timestamp)
+		childKey, _ := key.DerivedKeyWithPath(derivedPath, tw.Config.CurveType)
+
+		for i := 0; i < count; i++ {
+
+			wif, a, err := tw.CreateNewPrivateKey(key.KeyID, childKey, derivedPath, uint64(i))
+			if err != nil {
+				t.Errorf("CreateNewPrivateKey[%d] failed unexpected error: %v\n", i, err)
+				continue
+			}
+
+			t.Logf("CreateNewPrivateKey[%d] wif = %v \n", i, wif)
+			t.Logf("CreateNewPrivateKey[%d] address = %v \n", i, a.Address)
+		}*/
 }
 
 func TestGetWalleInfo(t *testing.T) {

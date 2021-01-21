@@ -16,8 +16,8 @@
 package hypercash
 
 import (
-	"github.com/blocktree/openwallet/common"
-	"github.com/blocktree/openwallet/log"
+	"github.com/blocktree/openwallet/v2/common"
+	"github.com/blocktree/openwallet/v2/log"
 	"github.com/graarh/golang-socketio"
 	"github.com/graarh/golang-socketio/transport"
 	"github.com/shopspring/decimal"
@@ -37,7 +37,7 @@ func TestGetBlockHeightByExplorer(t *testing.T) {
 }
 
 func TestGetBlockHashByExplorer(t *testing.T) {
-	hash, err := tw.getBlockHashByExplorer(238383)
+	hash, err := tw.getBlockHashByExplorer(436579)
 	if err != nil {
 		t.Errorf("getBlockHashByExplorer failed unexpected error: %v\n", err)
 		return
@@ -46,7 +46,7 @@ func TestGetBlockHashByExplorer(t *testing.T) {
 }
 
 func TestGetBlockByExplorer(t *testing.T) {
-	block, err := tw.getBlockByExplorer("0000000000000002d9a33f150dfd09278977bd5e525693ccd7ae380267b03b07")
+	block, err := tw.getBlockByExplorer("0000000000000003005885198691b4cce1cdba9645b8e064ce3d143ca2922f81")
 	if err != nil {
 		t.Errorf("GetBlock failed unexpected error: %v\n", err)
 		return
@@ -96,11 +96,10 @@ func TestGetMultiAddrTransactionsByExplorer(t *testing.T) {
 
 }
 
-
 func TestSocketIO(t *testing.T) {
 
 	var (
-		room = "inv"
+		room       = "inv"
 		endRunning = make(chan bool, 1)
 	)
 
@@ -146,7 +145,7 @@ func TestSocketIO(t *testing.T) {
 		return
 	}
 
-	<- endRunning
+	<-endRunning
 }
 
 func TestEstimateFeeRateByExplorer(t *testing.T) {

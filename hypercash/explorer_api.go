@@ -22,8 +22,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/blocktree/openwallet/log"
-	"github.com/blocktree/openwallet/openwallet"
+	"github.com/blocktree/openwallet/v2/log"
+	"github.com/blocktree/openwallet/v2/openwallet"
 	"github.com/imroc/req"
 	"github.com/shopspring/decimal"
 	"github.com/tidwall/gjson"
@@ -177,7 +177,7 @@ func (wm *WalletManager) getTransactionByExplorer(txid string) (*Transaction, er
 func (wm *WalletManager) listUnspentByExplorer(address ...string) ([]*Unspent, error) {
 
 	var (
-		utxos = make([]*Unspent, 0)
+		utxos   = make([]*Unspent, 0)
 		utxoMap = make(map[string]*Unspent, 0)
 	)
 

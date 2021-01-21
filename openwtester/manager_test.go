@@ -2,9 +2,9 @@ package openwtester
 
 import (
 	"fmt"
-	"github.com/blocktree/openwallet/log"
-	"github.com/blocktree/openwallet/openw"
-	"github.com/blocktree/openwallet/openwallet"
+	"github.com/blocktree/openwallet/v2/log"
+	"github.com/blocktree/openwallet/v2/openw"
+	"github.com/blocktree/openwallet/v2/openwallet"
 	"path/filepath"
 	"testing"
 )
@@ -95,7 +95,7 @@ func TestWalletManager_GetAssetsAccountList(t *testing.T) {
 	walletID := "VyvuSsYQ2ziBBCGb71em8PyFJF6yNyH4UQ"
 	list, err := tm.GetAssetsAccountList(testApp, walletID, 0, 10000000)
 
-	log.Info("caccount=",len(list))
+	log.Info("caccount=", len(list))
 	if err != nil {
 		log.Error("unexpected error:", err)
 		return
