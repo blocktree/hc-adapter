@@ -940,8 +940,10 @@ func (decoder *TransactionDecoder) CreateHCSummaryRawTransaction(wrapper openwal
 			return nil, err
 		}
 
-		//保留1个omni的最低转账成本的utxo 用于汇总omni
-		unspents = decoder.keepOmniCostUTXONotToUse(unspents)
+		if decoder.wm.Config.OmniSupport {
+			//保留1个omni的最低转账成本的utxo 用于汇总omni
+			unspents = decoder.keepOmniCostUTXONotToUse(unspents)
+		}
 
 		//尽可能筹够最大input数
 		unspentLimit := decoder.wm.Config.MaxTxInputs - len(sumUnspents)
